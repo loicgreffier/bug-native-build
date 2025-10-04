@@ -39,7 +39,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1.3.5
+        uses: graalvm/setup-graalvm@v1.4.1
         with:
           distribution: 'graalvm'
           java-version: '21'
