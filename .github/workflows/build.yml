@@ -1,0 +1,55 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    branches:
+      - 'main'
+      - 'hotfix/v*.*.*'
+  schedule:
+    - cron: '0 5 * * 1'
+
+jobs:
+  build-native:
+    name: Build Native Image ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      matrix:
+        os: [ 'ubuntu-latest', 'ubuntu-24.04-arm', 'windows-latest', 'macos-latest' ]
+        include:
+          - os: 'ubuntu-latest'
+            platform: 'linux-amd64'
+            extension: ''
+          - os: 'ubuntu-24.04-arm'
+            platform: 'linux-arm64'
+            extension: ''
+          - os: 'macos-latest'
+            platform: 'darwin-arm64'
+            extension: ''
+          - os: 'windows-latest'
+            platform: 'windows-amd64'
+            extension: '.exe'
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          distribution: 'graalvm'
+          java-version: '21'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+
+      - name: Build
+        run: ./gradlew nativeCompile
